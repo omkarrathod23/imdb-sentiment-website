@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sentiment Result</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #E3FDFD, #FFE6E6);
+            margin: 0;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .result-box {
+            background: white;
+            margin: auto;
+            padding: 40px;
+            max-width: 600px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        h1 {
+            color: #3D5AFE;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .sentiment {
+            font-size: 22px;
+            font-weight: bold;
+            color: #111;
+            margin-top: 20px;
+        }
+
+        #chartContainer {
+            margin-top: 40px;
+        }
+
+        canvas {
+            max-width: 300px;
+            margin: auto;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 10px 25px;
+            background-color: #3D5AFE;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        a:hover {
+            background-color: #2A3EB1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="result-box">
+        <h1>Sentiment Result</h1>
+        <p><strong>Review:</strong> {{ review }}</p>
+        <div class="sentiment">
+            Result: {{ sentiment }} <br>
+            Positive: {{ positive }}% &nbsp; | &nbsp; Negative: {{ negative }}%
+        </div>
+
+        <div id="chartContainer">
+            <canvas id="sentimentChart"></canvas>
+        </div>
+
+        <a href="/">🔙 Analyze Another Review</a>
+    </div>
+
+    <!-- Add Chart Center Plugin -->
+    <script>
+        Chart.register({
+            id: 'centerText',
+            beforeDraw: function (chart) {
+                if (chart.config.options.elements.center) {
+                    const ctx = chart.ctx;
+                    const centerConfig = chart.config.options.elements.center;
+                    const fontSize = centerConfig.fontSize || '18';
+                    const fontColor = centerConfig.fontColor || '#000';
+                    const text = centerConfig.text;
+                    const sidePadding = centerConfig.sidePadding || 20;
+                    const sidePaddingCalculated = (sidePadding / 100) * (chart.innerRadius * 2);
+
+                    ctx.save();
+                    ctx.font = `${fontSize}px Segoe UI`;
+                    ctx.fillStyle = fontColor;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+
+                    const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
+                    const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
+
+                    ctx.fillText(text, centerX, centerY);
+                    ctx.restore();
+                }
+            }
+        });
+
+        const ctx = document.getElementById('sentimentChart').getContext('2d');
+        const sentimentChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Positive', 'Negative'],
+                datasets: [{
+                    data: [{{ positive_raw }}, {{ negative_raw }}],
+                    backgroundColor: ['#00C9A7', '#FF6B6B'],
+                    hoverBackgroundColor: ['#00B293', '#FF4F4F'],
+                    borderWidth: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#444',
+                            font: {
+                                size: 14
+                            }
+                        }
+                    }
+                },
+                elements: {
+                    center: {
+                        text: '{{ sentiment }}',
+                        fontColor: '#444',
+                        fontSize: 18,
+                        sidePadding: 15
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
